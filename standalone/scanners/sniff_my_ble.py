@@ -7,9 +7,34 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import keyboard  # Make sure to install this module: pip install keyboard
+import os
+import glob
 
-# Configure verbose logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+# Log directory setup
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+def setup_logging():
+    # Get the current timestamp for the log file name
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    log_file = os.path.join(LOG_DIR, f"bluetooth_scan_{timestamp}.log")
+
+    # Configure logging
+    logging.basicConfig(level=logging.DEBUG,
+                        format="%(asctime)s - %(levelname)s - %(message)s",
+                        handlers=[
+                            logging.FileHandler(log_file),
+                            logging.StreamHandler()
+                        ])
+
+    # Manage log files (keep only the 3 most recent)
+    log_files = sorted(glob.glob(os.path.join(LOG_DIR, "bluetooth_scan_*.log")))
+    if len(log_files) > 3:
+        for old_log in log_files[:-3]:
+            os.remove(old_log)
+
+# Initialize logging
+setup_logging()
 
 # SQLite Database setup (opened in the main thread)
 db_file = "bluetooth_devices.db"
