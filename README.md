@@ -28,3 +28,19 @@ All device data (timestamp, MAC, name, vendor, extra info) is saved in a SQLite 
 The scanning loop is run on a separate daemon thread, and concurrent threads are used for extra info retrieval, optimizing overall performance.
 ---
 This complete build should serve as a robust starting point for scanning and logging Bluetooth device data with enhanced maintainability and performance.
+
+----
+
+
+
+    VendorLookup Class: Encapsulates vendor mapping and lookup logic to facilitate future updates without affecting other parts of the code.
+    Bluetooth Scanning: Utilizes the PyBluez library to scan for nearby Bluetooth devices every 8 seconds, retrieving basic information such as MAC address and device name.
+    Extra Info Retrieval: Concurrently retrieves additional details for each discovered device using bluetoothctl info <MAC> with a ThreadPoolExecutor.
+    Database Logging: Saves all device data (timestamp, MAC, name, vendor, extra info) in a SQLite database named bluetooth_devices.db.
+    Threading: Runs the scanning loop on a separate daemon thread and uses concurrent threads for extra info retrieval to optimize performance.
+
+
+
+The program is designed to scan and log Bluetooth device data efficiently and maintainably.
+
+
