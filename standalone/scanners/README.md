@@ -20,7 +20,7 @@ This repository contains a Python script `sniff_my_ble.py` designed to scan for 
 
 ### Directory Structure
 
-```
+```markdown
 standalone/
 └── scanners/
     ├── logs/                  # Directory for log files
