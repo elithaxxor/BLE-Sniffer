@@ -78,7 +78,10 @@ scan_linux() {
         mac=$(echo "$line" | awk '{print $2}')
         name=$(echo "$line" | cut -d ' ' -f 3-)
         manufacturer=$(identify_manufacturer "$mac")
-        [[ -n "$mac" ]] && success "Found: $mac ($name) - Manufacturer: $manufacturer"
+        # Fetch additional details like RSSI
+        rssi=$(bluetoothctl info "$mac" | grep -i "RSSI" | awk '{print $2}')
+        device_type=$(bluetoothctl info "$mac" | grep -i "Icon" | awk '{print $2}')
+        [[ -n "$mac" ]] && success "Found: $mac ($name) - Manufacturer: $manufacturer - RSSI: $rssi - Type: $device_type"
     done
     bluetoothctl scan off &>/dev/null
 }
@@ -89,6 +92,7 @@ scan_macos() {
         [[ $line == *"Address:"* ]] && mac=$(echo "$line" | awk '{print $2}')
         [[ $line == *"Name:"* ]] && name=$(echo "$line" | cut -d ':' -f2- | xargs)
         manufacturer=$(identify_manufacturer "$mac")
+        # Additional details may be limited on macOS
         [[ -n "$mac" && -n "$name" ]] && success "Found: $mac ($name) - Manufacturer: $manufacturer"
     done
 }
