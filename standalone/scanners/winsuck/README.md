@@ -1,8 +1,9 @@
+Here's the updated `README.md` to include the changes we made to the `scan_bluetooth.ps1` script:
 
 ```markdown
 # Bluetooth Scanner Script
 
-This repository contains a PowerShell script `scan_bluetooth.ps1` designed to scan for active Bluetooth devices on a Windows machine. The script logs the results, handles errors, and provides user feedback via the console.
+This repository contains a PowerShell script `scan_bluetooth.ps1` designed to scan for active Bluetooth devices on a Windows machine. The script logs the results, handles errors, and provides user-friendly output.
 
 ## Overview
 
@@ -18,6 +19,8 @@ The `scan_bluetooth.ps1` script performs the following tasks:
 - **User Feedback**: Messages are displayed in the console with different colors to indicate their type (info, success, error).
 - **Menu for Scan Intervals**: Users can select scan intervals of 30 seconds, 3 minutes, 10 minutes, or continuous scanning.
 - **Error Handling**: The script includes error handling to catch and log any issues encountered during the Bluetooth scan process.
+- **Manufacturer Identification**: Identifies and categorizes Bluetooth devices based on MAC address prefixes using a predefined list.
+- **Additional Device Details**: Retrieves additional details such as device type and placeholder for signal strength (RSSI).
 
 ## Script Details
 
@@ -66,8 +69,19 @@ function ErrorMsg {
 }
 ```
 
+#### `Identify-Manufacturer`
+Identifies the manufacturer based on the MAC address prefix.
+
+```powershell
+function Identify-Manufacturer {
+    param ($MAC)
+    $prefix = $MAC.Substring(0, 8)
+    return $MAC_PREFIXES[$prefix] -or "Unknown"
+}
+```
+
 #### `Scan-Bluetooth`
-Performs the Bluetooth scan and logs the results. If no Bluetooth devices are found, it logs an error message.
+Performs the Bluetooth scan, identifies the manufacturer, and logs the results. If no Bluetooth devices are found, it logs an error message.
 
 ```powershell
 function Scan-Bluetooth {
@@ -81,7 +95,11 @@ function Scan-Bluetooth {
             foreach ($device in $devices) {
                 $name = $device.FriendlyName
                 $id = $device.InstanceId
-                Success "Found: $name ($id)"
+                $manufacturer = Identify-Manufacturer $id
+                $deviceType = $device.DeviceClass
+                $rssi = "RSSI information not available in PowerShell"
+
+                Success "Found: $name ($id) - Manufacturer: $manufacturer - Type: $deviceType - RSSI: $rssi"
             }
         }
     } catch {
@@ -176,12 +194,12 @@ Success "Script terminated. Log saved to $LogFile"
 
 The script generates a log file named `bluetooth_scan.log` in the same directory as the script. The log file contains timestamps and details of the Bluetooth scan results.
 
-## Example Output
+### Example Output
 
 ```plaintext
 [!] Starting Bluetooth scan...
 [!] Scanning Bluetooth devices using Get-PnpDevice...
-[+] Found: Bluetooth Device (ID: 12345)
+[+] Found: Bluetooth Device (ID: 12345) - Manufacturer: Example Inc. - Type: Computer - RSSI: RSSI information not available in PowerShell
 [+] Scan complete. Log saved to bluetooth_scan.log
 ```
 
@@ -189,6 +207,9 @@ The script generates a log file named `bluetooth_scan.log` in the same directory
 
 The script includes error handling to catch and log any issues encountered during the Bluetooth scan process.
 
-copyleft my mistakes are yours 
+---
+
+This repository aims to provide robust scripts for scanning and logging Bluetooth device data efficiently and maintainably.
 ```
 
+This updated `README.md` includes all the changes and enhancements made to the `scan_bluetooth.ps1` script, detailing the new features, script details, and usage instructions.
