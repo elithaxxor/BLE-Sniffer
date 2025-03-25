@@ -5,7 +5,7 @@ Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit fo
 ---
 
 ## 🌟 Overview
-
+    =-- standalone or webinterface. 
 ### 🎯 Purpose
 
 The **BLE-Sniffer** exists to make scanning and logging BLE devices a breeze! From **network monitoring** to **device tracking** and **research**, this repository has something for everyone.
@@ -20,6 +20,25 @@ The **BLE-Sniffer** exists to make scanning and logging BLE devices a breeze! Fr
 - **📂 Log Management**: Automatically deletes older logs to keep things tidy.
 - **⚡ Concurrency**: Uses threading to make the scan process faster and more efficient.
 - **🛑 Graceful Shutdown**: Stops cleanly with a hotkey—no crashing allowed!
+
+---
+
+---
+
+### 🌐 Flask Application: `app.py`
+
+The `app.py` script creates a web interface to display Bluetooth device logs stored in the SQLite database.
+
+#### 🔑 Key Features:
+- **Web Framework**: Powered by Flask for a sleek and simple web app.
+- **Database Interaction**: Fetches device logs from the SQLite database.
+- **HTML Templates**: Displays logs in a user-friendly table format.
+
+#### 🏃 How to Run:
+1. Install Flask:
+   ```bash
+   pip install flask
+
 
 ---
 
@@ -128,23 +147,5 @@ This script is designed for Windows users who want to scan Bluetooth devices wit
 - **Colorful Feedback**: Outputs messages with colors and emojis for better readability. 🌈
 - **Scan Intervals**: Offers the flexibility to choose between scan intervals or continuous scanning.
 
----
-
-### 🌐 Flask Application: `app.py`
-
-The `app.py` script creates a web interface to display Bluetooth device logs stored in the SQLite database.
-
-#### 🔑 Key Features:
-- **Web Framework**: Powered by Flask for a sleek and simple web app.
-- **Database Interaction**: Fetches device logs from the SQLite database.
-- **HTML Templates**: Displays logs in a user-friendly table format.
-
-#### 🏃 How to Run:
-1. Install Flask:
-   ```bash
-   pip install flask
-
-
----
 
 
