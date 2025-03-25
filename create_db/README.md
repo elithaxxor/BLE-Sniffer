@@ -1,4 +1,4 @@
-Sure, here is a `README.md` file for the `create_db` script:
+
 
 ```markdown
 # Create Database Script
