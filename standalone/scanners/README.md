@@ -6,6 +6,19 @@ Welcome to the **BLE-Sniffer** repository! 🎉 This is your ultimate toolkit fo
 
 ---
 
+run main to use the framework or direct access to the individual tooling is available:
+
+Here’s what’s inside this treasure chest:
+
+```
+standalone/
+└── scanners/
+    ├── logs/                  # Where log files live
+    ├── sniff_my_ble.py        # Python script for BLE scanning
+    ├── scan_bluetooth.ps1     # PowerShell script for Windows scanning
+    └── bluetooth_devices.db   # SQLite database for device info
+```
+
 ## 🌟 Overview
 
 ### 🎯 Purpose
@@ -24,18 +37,6 @@ Why does this repo exist? To make scanning and logging BLE devices as easy as pi
 
 ---
 
-## 🗂️ Repository Structure
-
-Here’s what’s inside this treasure chest:
-
-```
-standalone/
-└── scanners/
-    ├── logs/                  # Where log files live
-    ├── sniff_my_ble.py        # Python script for BLE scanning
-    ├── scan_bluetooth.ps1     # PowerShell script for Windows scanning
-    └── bluetooth_devices.db   # SQLite database for device info
-```
 
 ---
 
