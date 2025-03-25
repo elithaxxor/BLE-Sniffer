@@ -1,14 +1,11 @@
-import bluetooth
-import time
-import sqlite3
-import logging
-import subprocess
+import subprocess, bluetooth, logging, sqlite3, time, os, sys
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-import keyboard  # Make sure to install this module: pip install keyboard
-import os
+import keyboard  # TODO: Make sure to install this module: pip install keyboard
 import glob
+import asyncio
+from multiprocessing import Pool
 
 # Log directory setup
 LOG_DIR = "logs"
@@ -53,7 +50,6 @@ CREATE TABLE IF NOT EXISTS devices (
 ''')
 conn.commit()
 
-
 class VendorLookup:
     """
     Encapsulates the vendor mapping and lookup logic.
@@ -94,10 +90,8 @@ class VendorLookup:
         oui = mac.upper()[0:8]
         return self.vendor_mapping.get(oui, "Unknown Vendor")
 
-
 # Instantiate the vendor lookup object
 vendor_lookup = VendorLookup()
-
 
 def get_extra_info(mac):
     """
@@ -117,8 +111,21 @@ def get_extra_info(mac):
         logging.error(f"Error retrieving extra info for {mac}: {e}")
         return "Error retrieving extra info."
 
+async def scan_device(addr, name):
+    """
+    Async function to scan a single device and log its information.
+    """
+    extra_info = await asyncio.to_thread(get_extra_info, addr)
+    vendor = vendor_lookup.get_vendor(addr)
+    timestamp = datetime.now().isoformat()
+    cursor.execute(
+        "INSERT INTO devices (timestamp, mac_address, device_name, vendor, extra_info) VALUES (?, ?, ?, ?, ?)",
+        (timestamp, addr, name, vendor, extra_info)
+    )
+    conn.commit()
+    logging.debug(f"Logged device {addr} ({name}) with vendor {vendor}.")
 
-def scan_devices():
+async def scan_devices():
     """
     Performs a Bluetooth scan, concurrently retrieves extra device information,
     and logs the data into a SQLite database.
@@ -129,36 +136,20 @@ def scan_devices():
         devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True)
         logging.debug(f"Found {len(devices)} device(s).")
 
-        # Use a thread pool to concurrently fetch extra info for each device.
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            future_to_device = {
-                executor.submit(get_extra_info, addr): (addr, name)
-                for addr, name in devices
-            }
-            for future in as_completed(future_to_device):
-                addr, name = future_to_device[future]
-                extra_info = future.result()
-                vendor = vendor_lookup.get_vendor(addr)
-                timestamp = datetime.now().isoformat()
-                cursor.execute(
-                    "INSERT INTO devices (timestamp, mac_address, device_name, vendor, extra_info) VALUES (?, ?, ?, ?, ?)",
-                    (timestamp, addr, name, vendor, extra_info)
-                )
-                conn.commit()
-                logging.debug(f"Logged device {addr} ({name}) with vendor {vendor}.")
+        # Create a list of tasks for asyncio to run concurrently
+        tasks = [scan_device(addr, name) for addr, name in devices]
+        await asyncio.gather(*tasks)
     except Exception as e:
         logging.error(f"Error during Bluetooth scan: {e}")
-
 
 def scanning_loop():
     """
     Runs the scanning process indefinitely at 5-minute intervals.
     """
     while True:
-        scan_devices()
+        asyncio.run(scan_devices())
         logging.debug("Sleeping for 5 minutes before next scan...")
         time.sleep(300)  # Sleep for 5 minutes
-
 
 def quit_program():
     """
@@ -166,7 +157,6 @@ def quit_program():
     """
     logging.info("Quit hotkey pressed. Exiting program.")
     raise KeyboardInterrupt
-
 
 if __name__ == "__main__":
     try:
