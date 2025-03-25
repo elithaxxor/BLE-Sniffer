@@ -1,6 +1,7 @@
 #!/bin/bash
 
 LOG_FILE="bluetooth_scan.log"
+DB_FILE="$(pwd)/bluetooth_devices.db"
 
 # Colors
 GREEN="\033[1;32m"
@@ -61,12 +62,30 @@ check_dependencies() {
         error "Required tools are not available on this system."
         exit 1
     fi
+    if ! command -v sqlite3 &>/dev/null; then
+        error "sqlite3 is not installed."
+        exit 1
+    fi
 }
 
 identify_manufacturer() {
     local mac=$1
     local prefix=${mac:0:8}
     echo "${MAC_PREFIXES[$prefix]:-Unknown}"
+}
+
+update_database() {
+    local mac=$1
+    local name=$2
+    local manufacturer=$3
+    local rssi=$4
+    local device_type=$5
+    local timestamp=$(date '+%Y-%m-%dT%H:%M:%S')
+
+    sqlite3 $DB_FILE <<EOF
+INSERT INTO devices (timestamp, mac_address, device_name, vendor, extra_info)
+VALUES ('$timestamp', '$mac', '$name', '$manufacturer', 'RSSI: $rssi, Type: $device_type');
+EOF
 }
 
 scan_linux() {
@@ -78,10 +97,10 @@ scan_linux() {
         mac=$(echo "$line" | awk '{print $2}')
         name=$(echo "$line" | cut -d ' ' -f 3-)
         manufacturer=$(identify_manufacturer "$mac")
-        # Fetch additional details like RSSI
         rssi=$(bluetoothctl info "$mac" | grep -i "RSSI" | awk '{print $2}')
         device_type=$(bluetoothctl info "$mac" | grep -i "Icon" | awk '{print $2}')
         [[ -n "$mac" ]] && success "Found: $mac ($name) - Manufacturer: $manufacturer - RSSI: $rssi - Type: $device_type"
+        update_database "$mac" "$name" "$manufacturer" "$rssi" "$device_type"
     done
     bluetoothctl scan off &>/dev/null
 }
@@ -92,8 +111,8 @@ scan_macos() {
         [[ $line == *"Address:"* ]] && mac=$(echo "$line" | awk '{print $2}')
         [[ $line == *"Name:"* ]] && name=$(echo "$line" | cut -d ':' -f2- | xargs)
         manufacturer=$(identify_manufacturer "$mac")
-        # Additional details may be limited on macOS
         [[ -n "$mac" && -n "$name" ]] && success "Found: $mac ($name) - Manufacturer: $manufacturer"
+        update_database "$mac" "$name" "$manufacturer" "" ""
     done
 }
 
