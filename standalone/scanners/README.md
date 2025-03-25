@@ -10,7 +10,7 @@ run main to use the framework or direct access to the individual tooling is avai
 
 Here’s what’s inside this treasure chest:
 
-```
+```bash
 standalone/
 └── scanners/
     ├── logs/                  # Where log files live
