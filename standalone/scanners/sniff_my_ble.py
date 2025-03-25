@@ -1,12 +1,13 @@
 import subprocess, bluetooth, logging, sqlite3, time, os, sys
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import keyboard  # TODO: Make sure to install this module: pip install keyboard
 import glob
 import asyncio
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Pool
 
+## TODO: Make into a function, wrapper to log various tables 
 # Log directory setup
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
