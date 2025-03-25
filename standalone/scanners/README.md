@@ -1,3 +1,5 @@
+##### This is a light implimentatation.  "sniff_my_ble" is asynchonized with multi-threading, and works well with data transfer, and IO tasks. I've implimented "sniff_my_ble_cpuBound.py" if you plan to expand the project and require CPU processes (such as for data aggregation. #####
+
 
 ```markdown
 # 🕵️‍♂️ BLE-Sniffer
