@@ -123,9 +123,9 @@ if ($args.Count -gt 0) {
 
 
 How to Use
-
+```powershell
 .\create_db.ps1 custom_database.db
-
+```
 
 
 ⸻
@@ -219,7 +219,7 @@ Windows (Using Visual Studio)
 	4.	Build (Ctrl+Shift+B) and run (Ctrl+F5)
 
 ⸻
-
+```bash
 Linux
 	1.	Install dependencies:
 
@@ -228,12 +228,13 @@ sudo apt install gcc libsqlite3-dev
 
 	2.	Compile:
 
+
 gcc create_db.c -o create_db -lsqlite3
 
 	3.	Run:
 
 ./create_db my_custom.db
-
+```
 
 
 ⸻
