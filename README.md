@@ -1,4 +1,5 @@
-[[
+Sure! Here’s the content formatted for a `README.md` file:
+
 ```markdown
 # BLE-Sniffer
 
@@ -7,7 +8,7 @@ Welcome to the BLE-Sniffer repository! This repository contains scripts for scan
 ## Overview
 
 ### Purpose
-https://poe.com/s/EvuuQMTHASbIfbWhKaaZ?utm_source=linkhttps://poe.com/s/EvuuQMTHASbIfbWhKaaZ?utm_source=link
+
 The primary purpose of this repository is to provide tools for scanning and logging BLE devices. These tools can be used for various applications, such as network security monitoring, device tracking, and research.
 
 ### Features
@@ -58,39 +59,89 @@ This script is designed for Windows and scans for Bluetooth devices, logs the re
 - **User Feedback**: Provides colored messages for info, success, and error.
 - **Menu for Scan Intervals**: Allows users to select scan intervals or continuous scanning.
 
-## Usage
+### Flask Web Application: `app.py`
 
-### Prerequisites
+This script sets up a Flask web application to display Bluetooth device logs stored in an SQLite database.
 
-- **Python Script**:
-  - Python 3.x
-  - Bluetooth functionality enabled
-  - Required Python modules:
-    ```bash
-    pip install pybluez keyboard
-    ```
+#### Key Features:
 
-- **PowerShell Script**:
-  - Windows operating system with PowerShell installed
-  - Bluetooth functionality enabled
+- **Web Framework**: Uses Flask to create a web interface.
+- **Database Interaction**: Connects to a SQLite database to retrieve Bluetooth device logs.
+- **Templates**: Renders an HTML template to display the data.
 
-### Running the Python Script
+#### Detailed Breakdown:
 
-1. Open a terminal with appropriate privileges.
-2. Navigate to the directory containing the `sniff_my_ble.py` script.
-3. Execute the script by running:
-   ```bash
-   python sniff_my_ble.py
-   ```
+1. **Imports**: 
+   - `Flask` and `render_template` from the Flask package for web application functionality.
+   - `sqlite3` for interacting with the SQLite database.
 
-### Running the PowerShell Script
+2. **Flask Application Setup**: 
+   - Initializes a Flask application instance with `app = Flask(__name__)`.
 
-1. Open PowerShell with administrative privileges.
-2. Navigate to the directory containing the `scan_bluetooth.ps1` script.
-3. Execute the script by running:
-   ```powershell
-   .\scan_bluetooth.ps1
-   ```
+3. **Database Interaction**: 
+   - **`get_devices()`**: A function to retrieve all device logs from the SQLite database.
+     - Connects to the `bluetooth_devices.db` database.
+     - Sets the row factory to `sqlite3.Row` to access columns by name.
+     - Executes a query to select all records from the `devices` table, ordered by `id` in descending order.
+     - Fetches all results and closes the database connection.
+     - Returns the fetched device logs.
+
+4. **Flask Route**: 
+   - **`@app.route("/")`**: Defines the root route of the web application.
+     - Calls the `get_devices()` function to get device logs.
+     - Renders the `index.html` template, passing the device logs to the template as a context variable named `devices`.
+
+5. **Main Block**: 
+   - Runs the Flask application in debug mode on `localhost:5000` if the script is executed directly.
+
+#### Usage:
+
+- **Running the Application**:
+  1. Ensure you have Flask installed:
+     ```bash
+     pip install flask
+     ```
+  2. Execute the script:
+     ```bash
+     python app.py
+     ```
+  3. Open a web browser and navigate to `http://localhost:5000` to view the logged Bluetooth devices.
+
+#### Example `index.html` Template:
+
+The `index.html` template would typically display the device logs in a user-friendly format. Here’s an example of what it might look like:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bluetooth Device Logs</title>
+</head>
+<body>
+    <h1>Bluetooth Device Logs</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Timestamp</th>
+            <th>MAC Address</th>
+            <th>Device Name</th>
+            <th>Vendor</th>
+            <th>Extra Info</th>
+        </tr>
+        {% for device in devices %}
+        <tr>
+            <td>{{ device.id }}</td>
+            <td>{{ device.timestamp }}</td>
+            <td>{{ device.mac_address }}</td>
+            <td>{{ device.device_name }}</td>
+            <td>{{ device.vendor }}</td>
+            <td>{{ device.extra_info }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+```
 
 ## Log File Management
 
@@ -136,5 +187,4 @@ Feel free to submit issues, fork the repository, and create pull requests. Contr
 This repository aims to provide robust tools for scanning and logging Bluetooth device data efficiently and maintainably.
 ```
 
-This `README.md` provides a comprehensive overview of the `BLE-Sniffer` repository, including details about its purpose, features, usage, and example outputs.
-](https://poe.com/s/XrlfFG1ApUUc9PTnxUGp?utm_source=link)](https://poe.com/s/x6ONjfmV7vVhbVbW5QcV?utm_source=link)
+This `README.md` provides a comprehensive overview of the `BLE-Sniffer` repository, including details about its purpose, features, scripts, usage, and example outputs.
