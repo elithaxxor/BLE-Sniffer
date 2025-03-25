@@ -1,148 +1,59 @@
-# Bluetooth Scanner Script
-
 $LogFile = "bluetooth_scan.log"
 
-# MAC address prefix to manufacturer mapping
-$MAC_PREFIXES = @{
-    "F0:99:B6" = "Apple, Inc."
-    "28:FF:3C" = "Apple, Inc."
-    "D0:D0:03" = "Samsung Electronics Co., Ltd."
-    "08:FD:0E" = "Samsung Electronics Co., Ltd."
-    "CC:05:77" = "Huawei Technologies Co., Ltd."
-    "30:FB:B8" = "Huawei Technologies Co., Ltd."
-    "00:14:22" = "Dell Inc."
-    "04:0E:3C" = "HP Inc."
-    "00:68:EB" = "HP Inc."
-    "10:C5:95" = "Lenovo"
-    "98:93:CC" = "LG Electronics Inc."
-    "F0:BF:97" = "Sony Corporation"
-    "98:E8:FA" = "Nintendo Co., Ltd."
-    "80:C5:E6" = "Microsoft Corporation"
-    "58:CB:52" = "Google, Inc."
-    "68:DB:F5" = "Amazon Technologies Inc."
-    "A4:45:19" = "Xiaomi Communications Co., Ltd."
-    "A0:91:A2" = "OnePlus Electronics (Shenzhen) Co., Ltd."
-    "18:02:AE" = "Vivo Mobile Communication Co., Ltd."
-    "D8:1E:DD" = "Guangdong Oppo Mobile Telecommunications Corp., Ltd."
-    "24:46:C8" = "Motorola Mobility LLC (Lenovo)"
-    "BC:C3:42" = "Panasonic Communications Co., Ltd."
-    "1C:5A:6B" = "Philips Electronics Nederland BV"
-    "00:01:24" = "Acer Incorporated"
-    "04:92:26" = "ASUSTek COMPUTER INC."
-}
-
+# Logging function
 function Log {
     param ($Level, $Message)
-    # Log message with timestamp
     "$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss')) - [$Level] $Message" | Out-File -Append $LogFile
 }
 
+# Info message function
 function Info {
     param ($Message)
-    # Display and log informational message
     Write-Host "[!] $Message" -ForegroundColor Yellow
     Log "INFO" $Message
 }
 
+# Success message function
 function Success {
     param ($Message)
-    # Display and log success message
     Write-Host "[+] $Message" -ForegroundColor Green
     Log "OK" $Message
 }
 
+# Error message function
 function ErrorMsg {
     param ($Message)
-    # Display and log error message
     Write-Host "[-] $Message" -ForegroundColor Red
     Log "ERROR" $Message
 }
 
-function Identify-Manufacturer {
-    param ($MAC)
-    $prefix = $MAC.Substring(0, 8)
-    return $MAC_PREFIXES[$prefix] -or "Unknown"
-}
-
+# Modified Scan-Bluetooth function
 function Scan-Bluetooth {
     try {
-        Info "Scanning Bluetooth devices using Get-PnpDevice..."
-        # Retrieve active Bluetooth devices
+        Info "Scanning Bluetooth devices..."
         $devices = Get-PnpDevice -Class Bluetooth -Status OK
 
         if ($devices.Count -eq 0) {
-            # No devices found
             ErrorMsg "No active Bluetooth devices found."
         } else {
-            # Iterate over found devices and log each one
             foreach ($device in $devices) {
+                # Gather additional properties with fallbacks
                 $name = $device.FriendlyName
                 $id = $device.InstanceId
-                $manufacturer = Identify-Manufacturer $id
-                $deviceType = $device.DeviceClass
-                $rssi = "RSSI information not available in PowerShell"
+                $manufacturer = if ($device.Manufacturer) { $device.Manufacturer } else { "N/A" }
+                $hardwareID = if ($device.HardwareID) { $device.HardwareID -join ", " } else { "N/A" }
+                $status = $device.Status
+                $description = if ($device.Description) { $device.Description } else { "N/A" }
 
-                # Display and log detailed information for each device
-                Success "Found: $name ($id) - Manufacturer: $manufacturer - Type: $deviceType - RSSI: $rssi"
+                # Create a detailed log message
+                $logMessage = "Found: $name | ID: $id | Manufacturer: $manufacturer | HardwareID: $hardwareID | Status: $status | Description: $description"
+                Success $logMessage
             }
         }
     } catch {
-        # Log any errors encountered during the scan
         ErrorMsg "Error scanning Bluetooth devices: $_"
     }
 }
 
-function Show-Menu {
-    # Display menu options to the user
-    Write-Host "Choose scan interval:"
-    Write-Host "1. Scan every 30 seconds"
-    Write-Host "2. Scan every 3 minutes"
-    Write-Host "3. Scan every 10 minutes"
-    Write-Host "4. Continuous scan"
-    Write-Host "5. Exit"
-}
-
-function Get-Interval {
-    param ($choice)
-    # Map user choice to corresponding interval in seconds
-    switch ($choice) {
-        1 { return 30 }
-        2 { return 180 }
-        3 { return 600 }
-        4 { return 0 }
-        default { return -1 }
-    }
-}
-
-# Main loop
-while ($true) {
-    Show-Menu
-    $choice = Read-Host "Enter your choice (1-5)"
-    $interval = Get-Interval $choice
-
-    if ($interval -eq -1) {
-        Write-Host "Invalid choice. Please select a valid option." -ForegroundColor Red
-        continue
-    } elseif ($interval -eq 0) {
-        Info "Starting continuous Bluetooth scan..."
-        # Continuous scan with 30-second interval
-        while ($true) {
-            Scan-Bluetooth
-            Start-Sleep -Seconds 30
-        }
-    } elseif ($choice -eq 5) {
-        # Exit the script
-        Write-Host "Exiting..."
-        break
-    } else {
-        Info "Starting Bluetooth scan every $interval seconds..."
-        # Scan at specified interval
-        while ($true) {
-            Scan-Bluetooth
-            Start-Sleep -Seconds $interval
-        }
-    }
-    break
-}
-
-Success "Script terminated. Log saved to $LogFile"
+# Execute the scan
+Scan-Bluetooth
