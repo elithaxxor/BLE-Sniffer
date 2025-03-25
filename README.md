@@ -6,6 +6,9 @@ Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit fo
 
 ## 🌟 Overview
     =-- standalone or webinterface. 
+
+    [Standalone] --> Install dependencies, read README.md and then python3.
+    [web-interface]--> Cd into standalone, choose what you want and corresponding read README.md and then python3.
 ### 🎯 Purpose
 
 The **BLE-Sniffer** exists to make scanning and logging BLE devices a breeze! From **network monitoring** to **device tracking** and **research**, this repository has something for everyone.
