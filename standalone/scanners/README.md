@@ -2,8 +2,12 @@
 
 
 *The async magic of sniff_my_ble paired with multi-threading is a fantastic choice for smooth data transfer and I/O tasks—keeping it light and nimble.  
- Adding sniff_my_ble_cpuBound.py for those CPU-heavy jobs (like data aggregation) is a brilliant move! It’s like giving your project a turbo boost for future growth.  
- Have you run into any bottlenecks yet, or are you just future-proofing like a pro? Either way, this setup is sleek, smart, and beautifully structured—hats off to you!  
+
+*Added sniff_my_ble_cpuBound.py for those CPU-heavy jobs (like data aggregation) is a brilliant move! It’s like giving your project a turbo boost for future growth.  
+
+*Have you run into any bottlenecks yet, or are you just future-proofing like a pro? Either way, this setup is sleek, smart, with many optinos to chose from.
+
+## The standalone versions can be found as CLI or GUI applications. 
 
 
 ```markdown
