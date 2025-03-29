@@ -24,6 +24,7 @@ class BLEScannerApp:
         self.scanning = False
 
     def setup_ui(self):
+        # Setup UI elements: start/stop buttons and log output
         self.start_button = tk.Button(self.root, text="Start Scanning", command=self.start_scanning)
         self.start_button.pack(pady=10)
         self.stop_button = tk.Button(self.root, text="Stop Scanning", command=self.stop_scanning)
@@ -40,12 +41,12 @@ class BLEScannerApp:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         log_file = os.path.join(LOG_DIR, f"bluetooth_scan_{timestamp}.log")
 
-        # Configure logging
+        # Configure logging to file and GUI
         logging.basicConfig(level=logging.DEBUG,
                             format="%(asctime)s - %(levelname)s - %(message)s",
                             handlers=[
                                 logging.FileHandler(log_file),
-                                logging.StreamHandler(self)
+                                logging.StreamHandler(self)  # Stream logs to the GUI
                             ])
 
         # Manage log files (keep only the 3 most recent)
@@ -55,6 +56,7 @@ class BLEScannerApp:
                 os.remove(old_log)
 
     def write(self, message):
+        # Write log messages to the GUI
         self.log_output.insert(tk.END, message)
         self.log_output.yview(tk.END)
 
@@ -67,6 +69,7 @@ class BLEScannerApp:
         self.conn = sqlite3.connect(self.db_file, check_same_thread=False)
         self.cursor = self.conn.cursor()
 
+        # Create the devices table if it doesn't exist
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS devices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,6 +85,7 @@ class BLEScannerApp:
     def start_scanning(self):
         if not self.scanning:
             self.scanning = True
+            # Start the scanning loop in a separate daemon thread
             self.scan_thread = threading.Thread(target=self.scanning_loop, daemon=True)
             self.scan_thread.start()
             messagebox.showinfo("Info", "Started Bluetooth scanning.")
@@ -92,6 +96,7 @@ class BLEScannerApp:
             messagebox.showinfo("Info", "Stopped Bluetooth scanning.")
 
     def scanning_loop(self):
+        # Scanning loop running asynchronously
         while self.scanning:
             asyncio.run(self.scan_devices())
             logging.debug("Sleeping for 5 minutes before next scan...")
@@ -99,6 +104,7 @@ class BLEScannerApp:
 
     class VendorLookup:
         def __init__(self):
+            # Vendor mapping for MAC address prefixes
             self.vendor_mapping = {
                 "F0:99:B6": "Apple, Inc.",
                 "28:FF:3C": "Apple, Inc.",
@@ -128,10 +134,12 @@ class BLEScannerApp:
             }
 
         def get_vendor(self, mac):
+            # Extract the OUI (first 3 octets) and return the corresponding vendor
             oui = mac.upper()[0:8]
             return self.vendor_mapping.get(oui, "Unknown Vendor")
 
     def get_extra_info(self, mac):
+        # Use bluetoothctl to get extra information about a device
         try:
             result = subprocess.run(["bluetoothctl", "info", mac],
                                     capture_output=True, text=True, timeout=10)
@@ -147,6 +155,7 @@ class BLEScannerApp:
             return "Error retrieving extra info."
 
     async def scan_device(self, addr, name):
+        # Scan a single device and log its information asynchronously
         extra_info = await asyncio.to_thread(self.get_extra_info, addr)
         vendor = self.VendorLookup().get_vendor(addr)
         timestamp = datetime.now().isoformat()
@@ -158,17 +167,20 @@ class BLEScannerApp:
         logging.debug(f"Logged device {addr} ({name}) with vendor {vendor}.")
 
     async def scan_devices(self):
+        # Perform a Bluetooth scan and log data asynchronously
         logging.debug("Starting Bluetooth scan...")
         try:
             devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True)
             logging.debug(f"Found {len(devices)} device(s).")
 
+            # Create a list of tasks for asyncio to run concurrently
             tasks = [self.scan_device(addr, name) for addr, name in devices]
             await asyncio.gather(*tasks)
         except Exception as e:
             logging.error(f"Error during Bluetooth scan: {e}")
 
     def on_closing(self):
+        # Handle closing of the application
         if self.scanning:
             self.stop_scanning()
         self.conn.close()
