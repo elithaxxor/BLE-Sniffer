@@ -1,0 +1,24 @@
+document.addEventListener("DOMContentLoaded", function() {
+    fetchDevices();
+});
+
+function fetchDevices() {
+    fetch("backend.php")
+        .then(response => response.json())
+        .then(data => {
+            const devicesTable = document.getElementById("devices");
+            devicesTable.innerHTML = "";
+            data.forEach(device => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${device.timestamp}</td>
+                    <td>${device.mac_address}</td>
+                    <td>${device.device_name}</td>
+                    <td>${device.vendor}</td>
+                    <td>${device.extra_info}</td>
+                `;
+                devicesTable.appendChild(row);
+            });
+        })
+        .catch(error => console.error("Error fetching devices:", error));
+}
