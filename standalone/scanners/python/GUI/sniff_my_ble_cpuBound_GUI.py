@@ -1,18 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
-import subprocess
-import bluetooth
-import logging
+import subprocess, sys, os, re, asyncio 
+import bluetooth, logging, glob,
 import sqlite3
-import time
-import os
-import threading
+import time, os, threading
 import keyboard  # Make sure to install this module: pip install keyboard
-import glob
-import asyncio
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Pool
+
+
+# pip install keyboard 
+
 
 class BLEScannerApp:
     def __init__(self, root):
