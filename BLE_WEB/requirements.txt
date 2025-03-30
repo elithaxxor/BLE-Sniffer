@@ -1,0 +1,13 @@
+# requirements.txt for Flask and SQLite Application
+
+Flask>=2.0.0           # Flask web framework for building web applications
+Flask-SQLAlchemy>=2.5.0 # ORM for connecting to and using SQLite and other databases
+SQLite                   # Built-in support (no installation needed, included with Python)
+
+# Optional for extended functionalities
+Flask-Migrate>=3.1.0    # Database migration tool for Flask applications
+Flask-Login>=0.5.0      # User session management for Flask (if user management is needed)
+Flask-WTF>=1.0.0        # Forms handling with CSRF protection
+
+# Testing and development
+pytest>=6.2.0           # Testing framework for Python
