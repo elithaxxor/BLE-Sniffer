@@ -2,6 +2,9 @@
 
 Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit for scanning and logging Bluetooth Low Energy (BLE) devices. Whether you’re a network security enthusiast, a device tracker, or a researcher, this project will light up your Bluetooth world! 🔥
 
+Development Status: The project is currently in the alpha stage, indicating that it is still under active development and may contain bugs or incomplete features.
+
+#### TODO: Experiment w, NLTK Training on master_mac_list.csv 
 ---
 
 ## 🌟 Overview
@@ -13,9 +16,10 @@ Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit fo
 
 The **BLE-Sniffer** exists to make scanning and logging BLE devices a breeze! From **network monitoring** to **device tracking** and **research**, this repository has something for everyone.
 
-**Packet Sniffing: Ability to capture and analyze BLE packets.
-**Multi-Device Support: Can monitor multiple BLE devices simultaneously.
-**Real-Time Monitoring: Offers live tracking and logging of BLE communications.
+    ** Packet Sniffing: Ability to capture and analyze BLE packets.
+    ** Multi-Device Support: Can monitor multiple BLE devices simultaneously.
+    ** Real-Time Monitoring: Offers live tracking and logging of BLE communications.
+    
 ---
 
 ### 🚀 Features
