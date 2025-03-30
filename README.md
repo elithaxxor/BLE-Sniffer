@@ -13,6 +13,9 @@ Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit fo
 
 The **BLE-Sniffer** exists to make scanning and logging BLE devices a breeze! From **network monitoring** to **device tracking** and **research**, this repository has something for everyone.
 
+**Packet Sniffing: Ability to capture and analyze BLE packets.
+**Multi-Device Support: Can monitor multiple BLE devices simultaneously.
+**Real-Time Monitoring: Offers live tracking and logging of BLE communications.
 ---
 
 ### 🚀 Features
