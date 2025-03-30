@@ -1,4 +1,7 @@
 # Bluetooth Scanning Scripts
+
+<img width="372" alt="Screenshot 2025-03-29 at 8 40 43 PM" src="https://github.com/user-attachments/assets/148a5b7d-2d00-4730-b54d-0e9853013c51"/>
+
 ```markdown 
 ## 1. `sniff_my_ble.py`
 
