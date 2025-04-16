@@ -1,114 +1,176 @@
-""" This Python script acts as a BLE (Bluetooth Low Energy) Standalone Sniffer that scans for BLE advertisement packets """ 
+# ble_sniffer.py
+"""
+BLE-Sniffer Standalone - Comprehensive BLE Advertisement Sniffer
+Features:
+- Scan BLE advertisements/passive scans
+- Filter by MAC, name/substrings, or RSSI
+- Log to CSV, plaintext, or just print
+- Optional: Save extended Bluetooth info & manufacturer data
+- Cross-platform: Linux/Mac/Windows (where supported by bleak)
+"""
 
 import asyncio
-from bleak import BleakScanner
 import argparse
-from utils import format_mac, human_time, write_csv, truncate_hex
+from typing import List, Dict
 
-# Global list to store found devices during the scan
-found_devices = []
+from utils import (
+    cstr, Colors, human_time, format_mac, decode_name, prettify_manufacturer,
+    write_csv, write_log, fuzzy_match, debug, warn
+)
 
-# Function to parse command-line arguments
+try:
+    from bleak import BleakScanner
+except ImportError:
+    print("ERROR: bleak module not found. Install with 'pip install bleak'")
+    exit(1)
+
+found_devices: List[Dict] = []
+raw_log_lines: List[str] = []
+EXTRA_FIELDS = ["address", "name", "timestamp", "rssi", "manufacturer_data", "details"]
+
+
 def parse_args():
-    """
-    Parses command-line arguments for the BLE sniffer script.
-
-    Available arguments:
-    - --duration: Duration of the BLE scan (in seconds).
-    - --output: Filename to save results in CSV format.
-    - --verbose: Enables detailed output, including manufacturer data.
-
-    Returns:
-        argparse.Namespace: Parsed arguments.
-    """
     parser = argparse.ArgumentParser(
-        description="BLE Standalone Sniffer -- Scans BLE Advertisement Packets."
+        description="🔎 BLE Standalone Sniffer: Scan, filter, and log BLE-advertised devices"
     )
-    parser.add_argument("--duration", type=int, default=30, help="Duration to scan (seconds). Default: 30")
-    parser.add_argument("--output", type=str, help="CSV file to save scan results.")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (shows manufacturer data, etc.)")
+    parser.add_argument("--duration", type=int, default=30, help="Scan duration in seconds (default 30)")
+    parser.add_argument("--mac", nargs="+", help="MAC address(es) (substring, case-insensitive) to filter")
+    parser.add_argument("--name", nargs="+", help="Device name(s) (substring, case-insensitive) to filter")
+    parser.add_argument("--min-rssi", type=int, default=None, help="Minimum RSSI threshold to include")
+    parser.add_argument("--output", type=str, help="CSV file to write the device log")
+    parser.add_argument("--log", type=str, help="TXT file to write text log")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print details per device")
+    parser.add_argument("--unique", action="store_true", help="Only print/log each detected address once (default)")
+    parser.add_argument("--repeat", action="store_true", help="Log every sighting (use with care!)")
+    parser.add_argument("--details", action="store_true", help="Print full advertisement details (raw dump)")
+    parser.add_argument("--sort", choices=["rssi", "time"], default="rssi", help="Sort output by RSSI or time")
+    parser.add_argument("--no-color", action="store_true", help="Disable colored terminal output")
+    parser.add_argument("--test", action="store_true", help="Print test record and exit (for debugging)")
     return parser.parse_args()
 
-# Function to handle each discovered BLE device
-def handle_device(device, adv_data, verbose=False):
-    """
-    Callback function to process and log information about a discovered BLE device.
 
-    Args:
-        device (bleak.backends.device.BLEDevice): The discovered BLE device.
-        adv_data (bleak.backends.scanner.AdvertisementData): Advertisement data from the BLE device.
-        verbose (bool): Whether to include detailed output, e.g., manufacturer data.
+address_seen = set()
+
+def log_and_print_device(device, adv_data, args):
     """
-    # Format the device's address and gather relevant information
+    Handles logging, filtering, printing one found device.
+    Adds to found_devices and/or raw_log_lines as appropriate.
+    """
+    global address_seen
     address = format_mac(device.address)
-    name = device.name or adv_data.local_name or "<unknown>"
+    name = decode_name(device, adv_data)
     timestamp = human_time()
-    rssi = device.rssi
-    manuf = adv_data.manufacturer_data
-
-    # Format manufacturer data (if available) into a readable string
-    manuf_str = "; ".join(
-        [f"0x{k:04X}: {truncate_hex(bytes(v))}" for k, v in manuf.items()]
-    ) if manuf else ""
-
-    # Generate output string for the device
-    output = f"[{timestamp}] {address} | {name:20} | RSSI: {rssi:>4}"
-    if verbose and manuf:
-        output += f" | Manuf: {manuf_str}"
-
-    # Print the device information to the console
-    print(output)
-
-    # Append the device details to the global list for later use
-    found_devices.append({
+    rssi = getattr(device, "rssi", -999)
+    manufacturer_data = getattr(adv_data, "manufacturer_data", {})
+    details = f"{adv_data}" if args.details else ""
+    manuf_str = prettify_manufacturer(manufacturer_data)
+    record = {
         "timestamp": timestamp,
         "address": address,
         "name": name,
         "rssi": rssi,
         "manufacturer_data": manuf_str,
-    })
+        "details": details,
+    }
 
-# Asynchronous function to scan BLE devices
-async def scan_ble(duration=30, verbose=False):
-    """
-    Performs a BLE scan for a specified duration and processes discovered devices.
+    # Filtering logic
+    if args.mac and not fuzzy_match(address, args.mac):
+        return
+    if args.name and not fuzzy_match(name, args.name):
+        return
+    if args.min_rssi is not None and rssi < args.min_rssi:
+        return
+    if args.unique and address in address_seen and not args.repeat:
+        return
 
-    Args:
-        duration (int): Duration of the scan in seconds.
-        verbose (bool): Whether to include detailed output, e.g., manufacturer data.
-    """
-    global found_devices
-    found_addresses = set()  # Set to track already-seen device addresses
+    # Logging
+    if args.unique and not args.repeat:
+        address_seen.add(address)
+    found_devices.append(record)
 
-    # Inner callback function to handle each detected BLE device
+    # Text log line
+    if args.verbose or args.details or manuf_str:
+        line = f"[{timestamp}] {cstr(address, Colors.OKBLUE)} ▼ {cstr(name, Colors.BOLD)} RSSI:{rssi:>4} {cstr(manuf_str, Colors.OKCYAN)}"
+        if details:
+            line += f"
+     Details: {details}"
+    else:
+        line = f"[{timestamp}] {address} {name} RSSI:{rssi}"
+
+    print(line)
+    raw_log_lines.append(line)
+
+def demo_log():
+    print("Sample device log output:")
+    print(" " + "-"*70)
+    print("[2024-04-13 21:27:32] 60:AB:32:EF:EA:41 ▼ SensorTag V12        RSSI:-41 0x1234: AB12CDEF...(22 bytes)")
+    print(" " + "-"*70)
+
+async def scan_ble(args):
+    """Run BLE scan loop using bleak."""
+    global found_devices, address_seen, raw_log_lines
+    found_devices.clear()
+    raw_log_lines.clear()
+    address_seen.clear()
+    seen_count = 0
+
     def detection_callback(device, adv_data):
-        # Only process the device if it hasn't been seen before
-        if device.address not in found_addresses:
-            found_addresses.add(device.address)
-            handle_device(device, adv_data, verbose)
+        nonlocal seen_count
+        log_and_print_device(device, adv_data, args)
+        seen_count += 1
 
-    print(f"[*] Scanning BLE devices for {duration} seconds...")
-    scanner = BleakScanner(detection_callback)  # Initialize the BLE scanner
-    await scanner.start()  # Start scanning for BLE devices
-    await asyncio.sleep(duration)  # Wait for the specified scan duration
-    await scanner.stop()  # Stop scanning
-    print(f"[*] Scanning complete. {len(found_addresses)} unique devices found.")
+    print(cstr(f"
+[*] BLE Sniffer: scanning {args.duration}s ...", Colors.OKGREEN))
+    scanner = BleakScanner(detection_callback)
+    await scanner.start()
+    try:
+        await asyncio.sleep(args.duration)
+    except KeyboardInterrupt:
+        print(cstr("Scan stopped by user.", Colors.WARNING))
+    await scanner.stop()
+    print(cstr(f"[*] Scan complete. {len(found_devices)} device(s) logged.", Colors.OKCYAN))
 
-# Main function to execute the BLE sniffer
+
+def sort_results(devices, sort_by="rssi"):
+    if sort_by == "time":
+        return sorted(devices, key=lambda d: d.get("timestamp", ""))
+    return sorted(devices, key=lambda d: int(d.get("rssi", -999)), reverse=True)
+
 def main():
-    """
-    Main function to orchestrate the BLE scanning process, handle arguments,
-    and optionally save results to a CSV file.
-    """
-    args = parse_args()  # Parse command-line arguments
-    asyncio.run(scan_ble(args.duration, verbose=args.verbose))  # Run the BLE scan
+    args = parse_args()
+    if args.no_color:
+        global USE_COLOR
+        USE_COLOR = False
 
-    # Save results to a CSV file if the --output argument is provided
-    if args.output:
-        print(f"[*] Writing results to {args.output} ...")
-        write_csv(found_devices, args.output)  # Save found devices to a CSV file
-        print("[*] Done.")
+    if args.test:
+        demo_log()
+        exit(0)
 
-# Entry point for the script
+    # Show search/filter info
+    print(cstr("BLE Sniffer: Launching...", Colors.HEADER))
+    print(cstr(f"Duration: {args.duration} sec | Filters: MAC={args.mac or '-'} NAME={args.name or '-'} MinRSSI={args.min_rssi or '-'}", Colors.OKCYAN))
+
+    asyncio.run(scan_ble(args))
+
+    if found_devices:
+        # Sort results (rssi descending by default)
+        sorted_devices = sort_results(found_devices, args.sort)
+        if args.output:
+            write_csv(sorted_devices, args.output)
+            print(f"[*] Results written to {args.output}")
+        if args.log:
+            write_log(raw_log_lines, args.log)
+            print(f"[*] Log lines written to {args.log}")
+
+        print(cstr(f"Summary:", Colors.UNDERLINE))
+        for idx, d in enumerate(sorted_devices, 1):
+            print(f"{idx:03d}. {d['address']:18} {d['name']:24}  RSSI: {d['rssi']:>4}  {d['manufacturer_data']}")
+
+    else:
+        print(cstr("No devices matched your filters.", Colors.WARNING))
+
+    print(cstr("Done. Happy sniffing! 🛰️", Colors.OKGREEN))
+
+
 if __name__ == "__main__":
     main()
