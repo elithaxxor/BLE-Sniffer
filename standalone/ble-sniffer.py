@@ -12,10 +12,7 @@ import asyncio
 import argparse
 from typing import List, Dict
 
-from utils import (
-    cstr, Colors, human_time, format_mac, decode_name, prettify_manufacturer,
-    write_csv, write_log, fuzzy_match, debug, warn
-)
+from utils import (cstr, Colors, human_time, format_mac, decode_name, prettify_manufacturer, write_csv, write_log, fuzzy_match, debug, warn)
 
 try:
     from bleak import BleakScanner
