@@ -1,9 +1,4 @@
-# 🕵️‍♂️ BLE-Sniffer
-
-
-
-
-
+# 🕵️‍♂️ BLE-Sniffer + Scanner
 
 Welcome to the **BLE-Sniffer** repository! 🎉 This is your one-stop toolkit for scanning and logging Bluetooth Low Energy (BLE) devices. Whether you’re a network security enthusiast, a device tracker, or a researcher, this project will light up your Bluetooth world! 🔥
 
@@ -200,4 +195,39 @@ v1.0.0 - Initial Release
 
 
 
+---
 
+## 📝 Changelog
+
+### v1.2.0 (2025-04-16)
+- **PowerShell Script Enhancements (`scan_bluetooth.ps1`)**:
+  - Added dynamic log file configuration via parameters and environment variables.
+  - Improved error handling with detailed exception messages.
+  - Introduced logging levels (`INFO`, `ERROR`, `OK`) for better log clarity.
+  - Ensured compatibility checks for required cmdlets (`Get-PnpDevice`).
+  - Modularized functions for reusability and maintainability.
+  - Added fallback handling for missing device properties.
+
+- **Documentation Updates**:
+  - Added a detailed description of the `scan_bluetooth.ps1` script.
+  - Updated usage instructions for database initialization scripts.
+  - Refined repository structure and overview sections in the README.
+  - Included examples for Python and PowerShell scripts.
+
+---
+
+### v1.1.0 (2025-03-25)
+- Enhanced `sniff_my_ble.py` with asynchronous functions and improved logging.
+- Updated `scan_bluetooth.ps1` with colorful feedback and scan interval options.
+- Improved vendor lookup with a comprehensive MAC prefix list.
+- Introduced `app.py` for a Flask-based web interface.
+- Updated documentation to reflect new features and improvements.
+
+---
+
+### v1.0.0 (Initial Release)
+- Introduced `sniff_my_ble.py` and `scan_bluetooth.ps1`.
+- Set up SQLite database for logging BLE data.
+- Implemented basic vendor identification.
+
+---
